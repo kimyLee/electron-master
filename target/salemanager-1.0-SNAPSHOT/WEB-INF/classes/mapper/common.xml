@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.CommonMapper">
+<select id="getTableNames" resultType="String">
+	select table_name from information_schema.tables where table_schema='sale'
+</select>
+
+<select id="loadTables">
+ 	SELECT * FROM list_sales
+	INTO OUTFILE 'd:\\beifen\\list_sales.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM list_stock
+	INTO OUTFILE 'd:\\beifen\\list_stock.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_amount
+	INTO OUTFILE 'd:\\beifen\\t_amount.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_cost
+	INTO OUTFILE 'd:\\beifen\\t_cost.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_cost_order
+	INTO OUTFILE 'd:\\beifen\\t_cost_order.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_customers
+	INTO OUTFILE 'd:\\beifen\\t_cusromers.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_debit
+	INTO OUTFILE 'd:\\beifen\\t_debit.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_debit_info
+	INTO OUTFILE 'd:\\beifen\\t_debit_info.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n'; 
+	
+	SELECT * FROM t_goods
+	INTO OUTFILE 'd:\\beifen\\t_goods.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n' ;
+	
+	SELECT * FROM t_huocha
+	INTO OUTFILE 'd:\\beifen\\t_huocha.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_procures
+	INTO OUTFILE 'd:\\beifen\\t_procures.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_sales
+	INTO OUTFILE 'd:\\beifen\\t_sales.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_stock
+	INTO OUTFILE 'd:\\beifen\\t_stock.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_supplier
+	INTO OUTFILE 'd:\\beifen\\t_supplier.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_ticheng
+	INTO OUTFILE 'd:\\beifen\\t_ticheng.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_transfer
+	INTO OUTFILE 'd:\\beifen\\t_transfer.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+	
+	SELECT * FROM t_users
+	INTO OUTFILE 'd:\\beifen\\t_users.csv'
+	CHARACTER SET gbk
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	ESCAPED BY ''
+	LINES TERMINATED BY '\n';
+</select>
+
+</mapper>

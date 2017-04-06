@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.GoodsMapper">
+
+    <insert id="insert" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO t_goods (SPELL, NAME, UNIT, WEIGH_FEE, PACK_FEE, SUPPLIER, INVENTORY)
+        VALUES (#{spell}, #{name}, #{unit}, #{weighFee}, #{packFee}, #{supplier}, #{inventory})
+    </insert>
+
+    <update id="update" parameterType="Object">
+        UPDATE t_goods SET SPELL = #{spell},
+        NAME = #{name},
+        UNIT = #{unit},
+        WEIGH_FEE = #{weighFee},
+        PACK_FEE = #{packFee},
+        SUPPLIER = #{supplier},
+        INVENTORY = #{inventory}
+        WHERE ID = #{id}
+    </update>
+    
+    <delete id="delete" parameterType="int">
+        DELETE FROM t_goods WHERE ID = #{id}
+    </delete>
+
+    <select id="search" parameterType="String" resultType="java.util.Map">
+     SELECT
+	ID id,
+	SPELL spell,
+	NAME name,
+	UNIT unit,
+	WEIGH_FEE weighFee,
+	PACK_FEE packFee,
+	SUPPLIER supplier,
+	INVENTORY inventory
+  FROM
+	t_goods
+  WHERE
+	ID LIKE CONCAT(#{key}, '%')
+  OR SPELL LIKE CONCAT(#{key}, '%');
+    </select>
+
+    <select id="query" parameterType="Object" resultType="java.util.Map">
+        SELECT
+	ID id,
+	SPELL spell,
+	NAME name,
+	UNIT unit,
+	WEIGH_FEE weighFee,
+	PACK_FEE packFee,
+	SUPPLIER supplier,
+	INVENTORY inventory
+  FROM
+	t_goods
+  LIMIT #{startRow}, #{size}
+    </select>
+
+    <select id="selectCount" resultType="int">
+        SELECT
+        count(*)
+        FROM
+        t_goods
+    </select>
+
+    <select id="querySale" resultType="java.util.Map">
+        SELECT
+        count(*)
+        FROM
+        t_goods
+    </select>
+
+    <select id="selectByID" parameterType="int" resultType="java.util.Map">
+        SELECT ID id,
+SUPPLIER supplier,
+NAME name,
+CLEAR_TYPE clearType,
+UNIT_FEE unitFee,
+PRICE1 price1,
+PRICE2 price2,
+PRICE3 price3,
+PRICE4 price4,
+PRICE5 price5,
+PERCENTAGE1 percentage1,
+PERCENTAGE2 percentage2,
+PERCENTAGE3 percentage3,
+PERCENTAGE4 percentage4,
+PERCENTAGE5 percentage5
+ FROM t_goods
+WHERE ID = #{id}
+    </select>
+
+</mapper>

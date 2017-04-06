@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.CustomersMapper">
+
+    <insert id="insert" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO t_customers (SPELL, NAME, PHONE, LOAN, CREDIT, REMARK)
+        VALUES (#{spell}, #{name}, #{phone}, #{loan}, #{credit}, #{remark})
+    </insert>
+    
+	<select id="judge" parameterType="Object" resultType="int">
+		SELECT COUNT(1) FROM t_customers WHERE PHONE = #{phone}
+	</select>
+	
+	<select id="updateJudge" parameterType="Object" resultType="java.util.Map">
+		SELECT * FROM t_customers WHERE PHONE = #{phone} AND ID != #{id}
+	</select>
+	
+    <update id="update" parameterType="Object">
+        UPDATE t_customers SET SPELL = #{spell},
+        NAME = #{name},
+        PHONE = #{phone},
+        LOAN = #{loan},
+        CREDIT = #{credit},
+        REMARK = #{remark}
+        WHERE ID = #{id}
+    </update>
+    
+    <delete id="delete" parameterType="Object">
+        DELETE FROM t_customers WHERE ID = #{id}
+    </delete>
+
+    <select id="search" parameterType="String" resultType="java.util.Map">
+     SELECT
+	ID id,
+	SPELL spell,
+	NAME name,
+	PHONE phone,
+	LOAN loan,
+	CREDIT credit,
+	REMARK remark
+  FROM
+	t_customers
+  WHERE
+	ID LIKE CONCAT(#{key}, '%')
+  OR SPELL LIKE CONCAT(#{key}, '%');
+    </select>
+
+    <select id="query" parameterType="Object" resultType="java.util.Map">
+        SELECT
+        ID id,
+        SPELL spell,
+        NAME name,
+        PHONE phone,
+        LOAN loan,
+        CREDIT credit,
+        REMARK remark
+        FROM
+        t_customers
+        LIMIT #{startRow}, #{size}
+    </select>
+
+    <select id="selectCount" resultType="int">
+        SELECT
+        count(*)
+        FROM
+        t_customers
+    </select>
+
+    <insert id="insertDebit" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO t_debit(DATE, C_ID, C_SPELL, C_NAME, SUPPLIER, SUPPLIERID, MONEY, TYPE, REMARK)
+        VALUES(CURDATE(), #{cId}, #{cSpell}, #{cName}, #{supplier}, #{supplierId}, #{money}, #{type}, #{remark});
+    </insert>
+	
+	<select id="selectMaxId" resultType="int">
+	SELECT MAX(id) FROM t_debit;
+	</select>
+	
+    <insert id="insertDebitBySale" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO t_debit(DATE, C_ID, C_SPELL, C_NAME, SUPPLIER, MONEY, TYPE, REMARK, S_ID)
+        VALUES(CURDATE(), #{cId}, #{cSpell}, #{cName}, #{supplier}, #{money}, #{type}, #{remark}, #{sId});
+    </insert>
+
+    <insert id="insertDebitInfo" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO t_debit_info(C_ID, C_NAME, SUPPLIER, MONEY, SUPPLIERID)
+        VALUES(#{cId}, #{cName}, #{supplier}, #{money}, #{supplierId})
+    </insert>
+
+    <update id="updateDebitInfo" parameterType="Object">
+        UPDATE t_debit_info SET MONEY = #{money}
+        WHERE C_ID = #{cId}
+        AND SUPPLIERID = #{supplierId}
+    </update>
+
+    <select id="selectDebitInfo" resultType="java.util.Map">
+        SELECT C_ID cId,
+        C_NAME cName,
+        SUPPLIERID supplierId,
+        SUPPLIER supplier,
+        MONEY money
+        FROM
+        t_debit_info
+        WHERE C_ID = #{cId}
+        AND SUPPLIERID = #{supplierId}
+    </select>
+
+    <select id="selectLoan" parameterType="int" resultType="double">
+        SELECT LOAN FROM t_customers
+        WHERE ID = #{id}
+    </select>
+
+    <select id="selectByID" resultType="java.util.Map">
+        SELECT
+	ID id,
+	SPELL spell,
+	NAME name,
+	PHONE phone,
+	LOAN loan,
+	CREDIT credit,
+	REMARK remark
+  FROM
+	t_customers
+  WHERE
+    ID = #{id}
+    </select>
+
+    <select id="queryLoanDetails" parameterType="int" resultType="java.util.Map">
+        SELECT
+        SUPPLIER supplier,
+        MONEY money
+        FROM
+        t_debit_info
+        WHERE
+        C_ID = #{id}
+    </select>
+
+    <select id="queryLoanTotal" resultType="java.util.Map">
+        SELECT
+        C_ID cId,
+        C_NAME cName,
+        sum(MONEY) money
+        FROM
+        t_debit_info
+        GROUP BY C_ID
+    </select>
+
+    <select id="queryLoanTotalToday" resultType="java.util.Map">
+        SELECT
+        C_ID cId,
+        C_NAME cName,
+        sum(case when TYPE = 1 then MONEY else 0 END) moneyGet,
+        sum(case when TYPE = 0 then MONEY else 0 END) moneyloan
+        FROM
+        t_debit
+        GROUP BY C_ID
+    </select>
+
+    <select id="queryLoanTotalTodayBetween" resultType="java.util.Map">
+        SELECT
+        C_ID cId,
+        C_NAME cName,
+        sum(case when TYPE = 1 then MONEY else 0 END) moneyGet,
+        sum(case when TYPE = 0 then MONEY else 0 END) moneyloan
+        FROM
+        t_debit
+        WHERE
+        DATE &gt;= #{startDate}
+        AND
+        DATE &lt;= #{endDate}
+        GROUP BY C_ID
+    </select>
+
+	<select id="queryLoanHistory" parameterType="int" resultType="java.util.Map">
+        SELECT
+        ID loanId,
+        DATE date,
+        MONEY money,
+        C_NAME cName,
+        C_ID cId,
+        C_SPELL cSpell,
+        SUPPLIER supplier,
+        TYPE type,
+        REMARK remark,
+        S_ID sId
+        FROM
+        t_debit
+        WHERE
+        C_ID = #{id}
+        AND ISDELETE = 0
+    </select>
+    
+    <select id="queryLoanHistoryBetween" resultType="java.util.Map">
+        SELECT
+        ID loanId,
+        DATE date,
+        MONEY money,
+        C_NAME cName,
+        C_ID cId,
+        C_SPELL cSpell,
+        SUPPLIER supplier,
+        TYPE type,
+        REMARK remark,
+        S_ID sId
+        FROM
+        t_debit
+        WHERE
+        C_ID = #{id}
+        AND 
+        DATE &gt;= #{startDate} 
+        AND
+        DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+    
+    <select id="queryLoanHistorys" parameterType="int" resultType="java.util.Map">
+        SELECT
+        ID loanId,
+        DATE date,
+        MONEY money,
+        C_NAME cName,
+        C_ID cId,
+        C_SPELL cSpell,
+        SUPPLIER supplier,
+        TYPE type,
+        REMARK remark,
+        S_ID sId
+        FROM
+        t_debit
+        WHERE ISDELETE = 0
+    </select>
+    
+    <select id="queryLoanHistorysBetween" resultType="java.util.Map">
+        SELECT
+        ID loanId,
+        DATE date,
+        MONEY money,
+        C_NAME cName,
+        C_ID cId,
+        C_SPELL cSpell,
+        SUPPLIER supplier,
+        TYPE type,
+        REMARK remark,
+        S_ID sId
+        FROM
+        t_debit
+        WHERE
+        DATE &gt;= #{startDate} 
+        AND
+        DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+    
+    <update id="updateCustomerLoan" parameterType="int">
+    UPDATE t_customers 
+    SET LOAN = (SELECT SUM(money) FROM t_debit_info WHERE C_ID = #{id})
+    WHERE ID = #{id}
+    </update>
+</mapper>

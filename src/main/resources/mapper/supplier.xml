@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.SupplierMapper">
+
+    <insert id="insert" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT ignore INTO t_supplier (NAME, PHONE)
+        VALUES ( #{name}, #{phone})
+    </insert>
+
+    <select id="querySupplier" resultType="int">
+        SELECT COUNT(1) FROM t_supplier WHERE name=#{name};
+    </select>
+
+    <select id="updateJudge" resultType="int">
+        SELECT COUNT(1) FROM t_supplier WHERE ID=#{id};
+    </select>
+
+    <select id="queryPhone" resultType="int">
+         SELECT COUNT(1) FROM t_supplier WHERE phone=#{phone};
+    </select>
+
+    <update id="update" parameterType="Object">
+        UPDATE t_supplier SET NAME = #{name},
+        PHONE = #{phone}
+        WHERE ID = #{id}
+    </update>
+
+    <update id="myUpdate" parameterType="Object">
+        UPDATE t_supplier SET NAME = #{name}
+        WHERE ID = #{id}
+    </update>
+    
+    <delete id="delete" parameterType="Object">
+        DELETE FROM t_supplier WHERE ID = #{id}
+    </delete>
+
+    <select id="query" resultType="java.util.Map">
+        SELECT
+	ID id,
+	NAME name,
+	PHONE phone
+  FROM
+	t_supplier
+    </select>
+
+    <insert id="insertTransfer" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT  INTO t_transfer(DATE, DESTINATION, AMOUNT, REMARK)
+        VALUES (#{date}, #{destination}, #{amount}, #{remark})
+    </insert>
+
+    <select id="queryTransfer" resultType="java.util.Map">
+        SELECT ID id,
+        DATE date,
+        DESTINATION destination,
+        AMOUNT amount,
+        REMARK remark
+        FROM t_transfer
+        WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+    </select>
+
+    <update id="updateAmount">
+        UPDATE t_amount SET amount = #{amount}
+        WHERE ID = 1
+    </update>
+
+    <select id="selectAmount" resultType="Object">
+        SELECT AMOUNT amount
+        FROM t_amount
+        WHERE ID = 1
+    </select>
+
+    <insert id="addAmount">
+        INSERT  INTO t_amount(ID, AMOUNT)
+        VALUES (1, 0)
+    </insert>
+
+
+    <select id="judgeAmount" resultType="int">
+        SELECT COUNT(1)
+        FROM t_amount
+        WHERE ID = 1
+    </select>
+
+    <update id="updateSettlement" parameterType="Object">
+        UPDATE t_goods SET PACK_FEE = #{packFee},
+        WEIGH_FEE = #{weighFee},
+        CLEAR_TYPE = #{type},
+        UNIT_FEE = #{unitFee},
+        PRICE1 = #{price1},
+        PRICE2 = #{price2},
+        PRICE3 = #{price3},
+        PRICE4 = #{price4},
+        PRICE5 = #{price5},
+        PERCENTAGE1 = #{percentage1},
+        PERCENTAGE2 = #{percentage2},
+        PERCENTAGE3 = #{percentage3},
+        PERCENTAGE4 = #{percentage4},
+        PERCENTAGE5 = #{percentage5}
+        WHERE ID = #{id}
+    </update>
+
+    <select id="selectSettlement" resultType="java.util.Map">
+        SELECT ID id,
+        NAME name,
+        SUPPLIER supplier,
+        PACK_FEE packFee,
+        WEIGH_FEE weighFee,
+        CLEAR_TYPE type,
+        UNIT_FEE unitFee,
+        PRICE1 price1,
+        PRICE2 price2,
+        PRICE3 price3,
+        PRICE4 price4,
+        PRICE5 price5,
+        PERCENTAGE1 percentage1,
+        PERCENTAGE2 percentage2,
+        PERCENTAGE3 percentage3,
+        PERCENTAGE4 percentage4,
+        PERCENTAGE5 percentage5
+        FROM t_goods
+    </select>
+
+    <update id="invalidSettlement">
+        UPDATE t_goods SET CLEAR_TYPE = 0
+        WHERE ID = #{id}
+    </update>
+
+<!--     <select id="queryLoanHistorysBetween" resultType="java.util.Map">
+        SELECT
+        ID loanId,
+        DATE date,
+        MONEY money,
+        C_NAME cName,
+        C_ID cId,
+        C_SPELL cSpell,
+        SUPPLIER supplier,
+        TYPE type,
+        REMARK remark,
+        S_ID sId
+        FROM
+        t_debit
+        WHERE
+        SUPPLIER = #{name}
+        AND
+        DATE &gt;= #{startDate}
+        AND
+        DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select> -->
+
+    <select id="queryLoanHistorys" parameterType="String" resultType="java.util.Map">
+        SELECT
+        ID loanId,
+        DATE date,
+        MONEY money,
+        C_NAME cName,
+        C_ID cId,
+        C_SPELL cSpell,
+        SUPPLIER supplier,
+        TYPE type,
+        REMARK remark,
+        S_ID sId
+        FROM
+        t_debit
+        WHERE SUPPLIER = #{name} 
+        <if test="endDate != ''">
+        AND DATE &lt;= #{endDate}
+        </if>
+        <if test="startDate != ''">
+        AND DATE &gt;= #{startDate}
+        </if>
+        AND ISDELETE = 0
+    </select>
+
+</mapper>

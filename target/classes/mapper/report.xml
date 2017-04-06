@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.ReportMapper">
+    <select id="selectSuppliers" resultType="java.util.Map">
+        SELECT
+        z.supplier name,
+        CASE
+        WHEN a.saleCount is null THEN 0
+        ELSE a.saleCount
+        END
+        saleCount,
+        CASE
+        WHEN a.saleMoney is NULL THEN 0
+        ELSE a.saleMoney
+        END
+        saleMoney,
+        CASE
+        WHEN b.purchaseCount is NULL THEN 0
+        ELSE b.purchaseCount
+        END
+        purchaseCount,
+        CASE
+        WHEN b.purchaseMoney is NULL THEN 0
+        ELSE b.purchaseMoney
+        END
+        purchaseMoney,
+        CASE
+        WHEN d.ticheng is NULL THEN 0
+        ELSE d.ticheng
+        END
+        ticheng,
+        CASE
+        WHEN c.fee IS NULL THEN 0
+        ELSE c.fee
+        END
+        fee,
+        (
+        saleMoney - purchaseMoney - fee - ticheng
+        ) shicun
+        FROM
+        (
+        (SELECT
+        a.G_SUPPLIER supplier
+        FROM
+        list_sales a
+        LEFT JOIN t_sales b ON a.S_ID = b.ID
+        WHERE
+        b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        GROUP BY
+        a.G_SUPPLIER
+        ) UNION (
+        SELECT
+        a.G_SUPPLIER supplier
+        FROM
+        list_stock a
+        LEFT JOIN t_stock b ON a.S_ID = b.ID
+        WHERE
+        b.TYPE = 0
+        AND b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        GROUP BY
+        a.G_SUPPLIER
+        ) UNION (
+        SELECT
+        SUPPLIER supplier
+        FROM
+        t_cost_order
+        WHERE
+        ISDELETE = 0
+        AND DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        GROUP BY
+        SUPPLIER
+        ) UNION (
+        SELECT
+        G_SUPPLIER supplier
+        FROM
+        t_ticheng
+        WHERE
+        DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+        GROUP BY
+        G_SUPPLIER
+        )
+) z LEFT JOIN
+        (
+        SELECT
+        a.G_SUPPLIER supplier,
+        sum(a.COUNT) saleCount,
+        sum(a.MONEY) saleMoney
+        FROM
+        list_sales a
+        LEFT JOIN t_sales b ON a.S_ID = b.ID
+        WHERE
+        b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        GROUP BY
+        a.G_SUPPLIER
+        ) a ON z.supplier = a.supplier
+        LEFT JOIN (
+        SELECT
+        a.G_SUPPLIER supplier,
+        SUM(a.COUNT) purchaseCount,
+        sum(a.MONEY) purchaseMoney
+        FROM
+        list_stock a
+        LEFT JOIN t_stock b ON a.S_ID = b.ID
+        WHERE
+        b.TYPE = 0
+        AND b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        GROUP BY
+        a.G_SUPPLIER
+        ) b ON z.supplier = b.supplier
+        LEFT JOIN (
+        SELECT
+        SUPPLIER supplier,
+        sum(MONEY) fee
+        FROM
+        t_cost_order
+        WHERE
+        ISDELETE = 0
+        AND DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        GROUP BY
+        SUPPLIER
+        ) c ON z.supplier = c.supplier
+        LEFT JOIN (
+        SELECT
+        G_SUPPLIER supplier,
+        sum(TICHENG) ticheng
+        FROM
+        t_ticheng
+        WHERE
+        DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+        GROUP BY
+        G_SUPPLIER
+        ) d ON z.supplier = d.supplier
+    </select>
+    
+	<select id="reportDetail" resultType="java.util.Map">
+		SELECT 
+		ID id,
+		S_ID sId,
+		G_ID gId,
+		G_SPELL gSpell,
+		G_NAME gName,
+		G_SUPPLIER gSupplier,
+		G_WEIGH_FEE gWeighFee,
+		G_PACK_FEE gPackFee,
+		G_PRICE gPrice,
+		COUNT_UNIT countUnit,
+		COUNT count,
+		MONEY money,
+		UNIT unit,
+		ISDELETE isDelete
+		
+		FROM  list_sales
+		WHERE S_ID IN
+		(SELECT ID FROM t_sales 
+		WHERE
+		DATE &gt;= #{startDate}
+        AND 
+        DATE &lt;= #{endDate}
+		)
+	</select>
+    <select id="selectGoods" resultType="java.util.Map">
+        SELECT
+        a.gId gId,
+        a.gName gName,
+        a.saleCount saleCount,
+        a.saleMoney saleMoney,
+        (a.saleMoney / a.saleCount) salePerMoney,
+        b.purchaseCount purchaseCount,
+        b.purchaseMoney purchaseMoney,
+        d.INVENTORY stock,
+        c.ticheng ticheng,
+        (
+        a.saleMoney - b.purchaseMoney - c.ticheng
+        ) shicun
+        FROM
+        (
+        SELECT
+        a.G_ID gId,
+        a.G_NAME gName,
+        sum(a.COUNT) saleCount,
+        sum(a.MONEY) saleMoney
+        FROM
+        list_sales a
+        LEFT JOIN t_sales b ON a.S_ID = b.ID
+        WHERE
+        b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        GROUP BY
+        a.G_ID
+        ) a
+        JOIN (
+        SELECT
+        a.G_ID gId,
+        a.G_NAME gName,
+        SUM(a.COUNT) purchaseCount,
+        sum(a.MONEY) purchaseMoney
+        FROM
+        list_stock a
+        LEFT JOIN t_stock b ON a.S_ID = b.ID
+        WHERE
+        b.TYPE = 0
+        AND b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        GROUP BY
+        a.G_ID
+        ) b ON a.gId = b.gId
+        LEFT JOIN (
+        SELECT
+        G_ID gId,
+        G_NAME gName,
+        sum(TICHENG) ticheng
+        FROM
+        t_ticheng
+        WHERE
+        DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+        GROUP BY
+        G_ID
+        ) c ON b.gId = c.gId LEFT JOIN t_goods d ON b.gId = d.ID
+    </select>
+
+    <select id="selectCostByDate" resultType="Object">
+        SELECT
+        sum(MONEY) cost
+        FROM
+        t_cost_order
+        WHERE
+        DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+    </select>
+
+    <select id="selectTichengByDate" resultType="Object">
+        SELECT sum(TICHENG) ticheng FROM t_ticheng
+        WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+
+    <select id="selectSaleByDate" resultType="java.util.Map">
+        SELECT sum(SHISHOU) shishou,
+        sum(OWE_MONEY) oweMoney,
+        sum(CAR_FEE) carFee,
+        sum(APPEARANCE_FEE) appearanceFee,
+        sum(TOTAL_MONEY) saleMoney
+        FROM t_sales
+        WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+
+    <select id="selectStockByDate" resultType="Object">
+        SELECT sum(TOTAL_VALUE) jinhuo FROM t_stock
+        WHERE TYPE = 0
+        AND DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+    </select>
+
+<select id="selectTransferByDate" resultType="Object">
+    SELECT sum(AMOUNT) transfer FROM t_transfer
+    WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+    </select>
+
+    <select id="selectAmount" resultType="Object">
+        SELECT AMOUNT amount
+        FROM t_amount
+        WHERE ID = 1
+    </select>
+
+ <select id="selectRiqian" resultType="Object">
+     SELECT sum(MONEY) riqian FROM t_debit
+     WHERE TYPE = 0
+     AND DATE &gt;= #{startDate}
+     AND DATE &lt;= #{endDate}
+     AND ISDELETE = 0
+    </select>
+
+<select id="selectZongqian" resultType="Object">
+     SELECT sum(MONEY) zongqian FROM t_debit
+     WHERE TYPE = 0
+    </select>
+
+<select id="selectHuankuan" resultType="Object">
+     SELECT sum(MONEY) huankuan FROM t_debit
+     WHERE TYPE = 1
+     AND DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+    </select>
+<select id="selectBuhuo" resultType="Object">
+     SELECT sum(a.MONEY) buhuo FROM list_stock a LEFT JOIN t_stock b ON a.S_ID = b.ID
+     WHERE G_SUPPLIER = "补货"
+     AND DATE &gt;= #{startDate}
+     AND DATE &lt;= #{endDate}
+     AND a.ISDELETE = 0
+     AND b.ISDELETE = 0
+    </select>
+
+<select id="selectShishou" resultType="Object">
+     SELECT sum(SHISHOU) shishou FROM t_sales
+      WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+    </select>
+
+<select id="selectjiekuan" resultType="Object">
+     SELECT sum(MONEY) money FROM t_debit
+      WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+
+<select id="selectSanlunByDate" resultType="Object">
+     SELECT sum(CAR_FEE) money FROM t_sales
+     WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+
+<select id="selectChunchangByDate" resultType="Object">
+     SELECT sum(APPEARANCE_FEE) money FROM t_sales
+      WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+    </select>
+
+<select id="selectSanlun" resultType="java.util.Map">
+    SELECT C_ID cid, C_NAME cname, sum(CAR_FEE) money
+    FROM t_sales
+    WHERE ISDELETE = 0
+    GROUP BY C_ID
+</select>
+
+    <select id="selectCost" resultType="java.util.Map">
+    SELECT SUPPLIER supplier, sum(MONEY) money
+    FROM t_cost_order
+    WHERE ISDELETE = 0
+    GROUP BY supplier
+</select>
+    <select id="selectShouru" resultType="Object">
+        SELECT sum(MONEY) FROM t_cost_order
+        WHERE SUPPLIER = "公司"
+        AND DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+        AND MONEY &lt;= 0
+    </select>
+<select id="selectZhichu" resultType="Object">
+        SELECT sum(MONEY) FROM t_cost_order
+        WHERE SUPPLIER = "公司"
+        AND DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 0
+        AND MONEY &gt;= 0
+    </select>
+
+</mapper>

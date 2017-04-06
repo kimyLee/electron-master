@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.SalesMapper">
+
+    <insert id="insert" parameterType="Object" useGeneratedKeys="true" keyProperty="saleId" keyColumn="ID">
+        INSERT INTO t_sales (C_ID, DATE, C_SPELL, C_NAME, APPEARANCE_FEE, CAR_FEE, TOTAL_MONEY, OWE_MONEY, SHISHOU)
+        VALUES (#{cId}, #{date}, #{cSpell}, #{cName}, #{appearanceFee}, #{carFee}, #{totalMoney}, #{oweMoney},
+        #{shishou});
+        SET @last_id = LAST_INSERT_ID();
+
+        INSERT INTO list_sales (S_ID, G_ID, G_SPELL, G_NAME, G_SUPPLIER, G_WEIGH_FEE, G_PACK_FEE, G_PRICE, COUNT_UNIT,
+        COUNT, MONEY, UNIT)
+        VALUES
+        <foreach collection="storeList" item="model" separator=",">
+            (
+            @last_id, #{model.gId}, #{model.gSpell}, #{model.gName}, #{model.gSupplier}, #{model.gWeighFee},
+            #{model.gPackFee}, #{model.gPrice},
+            #{model.countUnit}, #{model.count}, #{model.money}, #{model.unit}
+            )
+        </foreach>
+    </insert>
+	
+    <insert id="insertStock" parameterType="Object" useGeneratedKeys="true" keyProperty="stockId" keyColumn="ID">
+        INSERT INTO t_stock (S_ID, TYPE, DATE, TOTAL_VALUE)
+        VALUES (#{saleId}, 2, #{date}, #{totalMoney});
+        SET @last_id = LAST_INSERT_ID();
+
+        INSERT INTO list_stock (S_ID, G_ID, G_SPELL, G_NAME, G_SUPPLIER, PRICE, COUNT_UNIT, COUNT)
+        VALUES
+        <foreach collection="storeList" item="model" separator=",">
+            (
+            @last_id, #{model.gId}, #{model.gSpell}, #{model.gName}, #{model.gSupplier}, #{model.gPrice},
+            #{model.countUnit}, #{model.count}
+            )
+        </foreach>
+    </insert>
+
+	<select id="selectMaxId" resultType="int">
+	SELECT MAX(id) FROM t_sales;
+	</select>
+	
+    <delete id="delete" parameterType="int">
+     	<!-- 
+        DELETE FROM t_sales WHERE ID = #{id}; 
+        DELETE FROM list_sales WHERE S_ID = #{id}; 
+     
+        DELETE
+		FROM
+			list_stock
+		WHERE 
+		S_ID = (
+			SELECT
+				ID
+			FROM
+				t_stock
+			WHERE
+				S_ID = #{id}
+		) ;
+		DELETE FROM t_stock WHERE S_ID = #{id};
+		DELETE FROM t_ticheng WHERE S_ID = #{id};
+		DELETE FROM t_debit WHERE S_ID = #{id};
+		 -->
+		<!-- 全部 改为 逻辑删除 -->
+		
+		UPDATE t_sales SET ISDELETE = 1 WHERE ID = #{id};
+        UPDATE list_sales SET ISDELETE = 1 WHERE S_ID = #{id};
+        
+		UPDATE 
+			list_stock
+		SET ISDELETE = 1
+		WHERE 
+		S_ID = (
+			SELECT
+				ID
+			FROM
+				t_stock
+			WHERE
+				S_ID = #{id}
+		) ;
+		
+		
+		UPDATE t_stock SET ISDELETE = 1 WHERE S_ID = #{id};
+		UPDATE t_ticheng SET ISDELETE = 1 WHERE S_ID = #{id};
+		UPDATE t_debit SET ISDELETE = 1 WHERE S_ID = #{id};
+		
+
+    </delete>
+
+    <select id="selectByPage"  parameterType="int" resultType="java.util.Map">
+        SELECT
+        ID id,
+        DATE date,
+        C_ID cId,
+        C_NAME cName,
+        C_SPELL cSpell,
+        APPEARANCE_FEE appearanceFee,
+        CAR_FEE carFee,
+        TOTAL_MONEY totalMoney,
+        SHISHOU shishou
+        FROM t_sales 
+         WHERE ISDELETE = #{_parameter}
+<!--      <choose>
+         <when test="_parameter != null and _parameter == 1">
+          WHERE ISDELETE = 1
+         </when>
+         <otherwise>
+          WHERE ISDELETE = 0
+          </otherwise>
+         </choose> -->
+       
+        <!-- 逻辑删除后select修改为WHERE ISDELETE != 1 -->
+    </select>
+
+    <select id="selectDetail" resultType="java.util.Map">
+        SELECT
+		list_sales.ID AS id,
+		list_sales.S_ID AS sId,
+		list_sales.G_ID AS gId,
+		list_sales.G_SPELL AS spell,
+		list_sales.G_NAME AS `name`,
+		list_sales.G_SUPPLIER AS supplier,
+		list_sales.G_WEIGH_FEE AS weighFee,
+		list_sales.G_PACK_FEE AS packFee,
+		list_sales.G_PRICE AS price,
+		list_sales.COUNT_UNIT AS countUnit,
+		list_sales.COUNT AS count,
+		list_sales.MONEY AS money,
+		list_sales.UNIT AS unit
+		FROM list_sales
+		WHERE S_ID = #{id}
+		AND ISDELETE = #{delete}
+<!-- 逻辑删除后select修改为WHERE ISDELETE != 1 -->
+    </select>
+
+    <select id="selectByDate" resultType="java.util.Map">
+        SELECT
+        ID id,
+        DATE date,
+        C_ID cId,
+        C_NAME cName,
+        C_SPELL cSpell,
+        APPEARANCE_FEE appearanceFee,
+        CAR_FEE carFee,
+        TOTAL_MONEY totalMoney,
+        SHISHOU shishou
+        FROM t_sales
+        WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = #{delete}
+        <!-- 逻辑删除后select修改为WHERE ISDELETE != 1 -->
+    </select>
+
+    <select id="selectGoodsByDate" resultType="java.util.Map">
+        SELECT
+        a.G_ID id,
+        a.G_NAME name,
+        c.UNIT unit,
+        sum(a.G_WEIGH_FEE) weighFee,
+        sum(a.G_PACK_FEE) packFee,
+        a.G_SUPPLIER supplier,
+        c.INVENTORY inventory,
+        sum(a.COUNT_UNIT) count,
+        sum(a.COUNT) amount
+        FROM
+        list_sales a 
+        LEFT JOIN t_sales b ON a.S_ID = b.ID LEFT JOIN t_goods c on a.G_ID = c.ID
+        WHERE b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND b.ISDELETE = 0
+        <if test="supplier != null and supplier != ''">
+            AND c.SUPPLIER = #{supplier}
+        </if>
+        GROUP BY a.G_ID
+        
+        <!-- 逻辑删除后select修改为WHERE ISDELETE != 1   -->
+    </select>
+
+    <select id="selectGoodsIDByDate" resultType="java.util.Map">
+        SELECT
+        a.S_ID id,
+        a.G_ID gId,
+        a.G_NAME name,
+        a.G_PRICE price,
+        a.G_SUPPLIER supplier,
+        a.COUNT_UNIT count,
+        a.COUNT amount,
+        a.G_WEIGH_FEE weigh_fee,
+        a.G_PACK_FEE pack_fee,
+        a.MONEY money,
+        b.C_NAME cName
+        FROM
+        list_sales a  
+        LEFT JOIN t_sales b ON a.S_ID = b.ID LEFT JOIN t_goods c on a.G_ID = c.ID
+        WHERE b.DATE &gt;= #{startDate}
+        AND b.DATE &lt;= #{endDate}
+        AND a.ISDELETE = 0
+        AND a.G_ID = #{id}
+        <!-- 逻辑删除后select修改为WHERE ISDELETE != 1 -->
+    </select>
+
+    <select id="selectById" resultType="java.util.Map">
+        SELECT
+	ID id,
+	SHISHOU shishou,
+        APPEARANCE_FEE appearanceFee,
+        CAR_FEE carFee,
+	C_ID cId
+	FROM
+		t_sales
+	WHERE
+		ID = #{id}
+	AND
+		ISDELETE = 0
+<!-- 逻辑删除后select修改为WHERE ISDELETE != 1  -->
+    </select>
+
+    <select id="selectCustomerOwnCompany" resultType="java.util.Map">
+        SELECT C_ID cId,
+        C_NAME cName,
+        SUPPLIER supplier,
+        MONEY money
+        FROM
+        t_debit_info
+        WHERE C_ID = #{cId}
+        AND SUPPLIER = #{supplier}
+    </select>
+
+    <delete id="deleteDebitBySale">
+        UPDATE t_debit SET ISDELETE = 1 WHERE S_ID = #{id};
+    </delete>
+
+    <select id="selectDeleteByDate" resultType="java.util.Map">
+        SELECT
+        ID id,
+        DATE date,
+        C_ID cId,
+        C_NAME cName,
+        C_SPELL cSpell,
+        APPEARANCE_FEE appearanceFee,
+        CAR_FEE carFee,
+        TOTAL_MONEY totalMoney,
+        SHISHOU shishou
+        FROM t_sales
+        WHERE DATE &gt;= #{startDate}
+        AND DATE &lt;= #{endDate}
+        AND ISDELETE = 1;
+    </select>
+</mapper>

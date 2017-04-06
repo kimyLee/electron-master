@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.UserMapper">
+    <insert id="insert" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+     INSERT INTO t_users(USERNAME, PASSWORD)
+     VALUES (#{username}, #{password})
+ </insert>
+    <select id="selectByUser" resultType="String">
+        SELECT
+        PASSWORD password
+        FROM t_users
+        WHERE USERNAME = #{username}
+    </select>
+    <update id="update">
+        UPDATE t_users SET PASSWORD = #{password}
+        WHERE USERNAME = #{username}
+    </update>
+
+</mapper>

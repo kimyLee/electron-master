@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="edu.scut.dao.StockMapper">
+
+    <insert id="insert" parameterType="Object" useGeneratedKeys="true" keyProperty="stockId" keyColumn="ID">
+        INSERT INTO t_stock (TYPE, DATE, TOTAL_COUNT_UNIT, TOTAL_COUNT, CAR_NUM, TOTAL_VALUE)
+        VALUES (#{type}, #{date}, #{totalCountUnit}, #{totalCount}, #{carNum}, #{totalValue});
+        SET @last_id = LAST_INSERT_ID();
+        INSERT INTO list_stock (S_ID, G_ID, G_SPELL, G_NAME, G_SUPPLIER, UNIT, PRICE, COUNT_UNIT, COUNT, MONEY)
+        VALUES
+        <foreach collection="goods" item="model" separator=",">
+            (
+            @last_id, #{model.gId}, #{model.gSpell}, #{model.gName}, #{model.gSupplier}, #{model.unit}, #{model.price},
+            #{model.countUnit}, #{model.count}, #{model.money}
+            )
+        </foreach>
+    </insert>
+
+    <select id="query" resultType="java.util.Map">
+    SELECT ID id, TYPE type, DATE date, CAR_NUM carNum, TOTAL_COUNT_UNIT totalCountUnit, TOTAL_COUNT totalCount, TOTAL_VALUE totalValue
+    FROM t_stock
+    WHERE DATE &gt;= #{startDate}
+    AND DATE &lt;= #{endDate}
+    AND ISDELETE = 0
+    <if test="type != null and type != ''">
+        AND TYPE = #{type}
+    </if>
+    <if test="supplier != null and supplier != ''">
+        AND SUPPLIER = #{supplier}
+    </if>
+  </select>
+
+    <select id="queryDetail" resultType="java.util.Map">
+        SELECT G_SPELL gSpell, G_NAME gName, G_SUPPLIER gSupplier, UNIT unit, PRICE price, COUNT_UNIT countUnit, COUNT count
+        FROM list_stock
+        WHERE S_ID = #{id}
+        AND ISDELETE = #{delete}
+    </select>
+
+    <select id="selectSettlement" resultType="java.util.Map">
+        SELECT ID id,
+SUPPLIER supplier,
+NAME name,
+CLEAR_TYPE clearType,
+UNIT_FEE unitFee,
+PRICE1 price1,
+PRICE2 price2,
+PRICE3 price3,
+PRICE4 price4,
+PRICE5 price5,
+PERCENTAGE1 percentage1,
+PERCENTAGE2 percentage2,
+PERCENTAGE3 percentage3,
+PERCENTAGE4 percentage4,
+PERCENTAGE5 percentage5
+ FROM t_goods
+WHERE ID = #{id}
+    </select>
+
+    <insert id="insertTichengs" useGeneratedKeys="true" keyColumn="ID">
+      INSERT INTO t_ticheng(S_ID, DATE, G_ID, G_NAME, G_SUPPLIER, TICHENG)
+      VALUES
+        <foreach collection="list" item="model" separator=",">
+            (
+            #{model.sId}, CURDATE(), #{model.gId}, #{model.gName}, #{model.gSupplier}, #{model.ticheng}
+            )
+        </foreach>
+    </insert>
+    
+    <update id="updateInventory" parameterType="Object">
+        UPDATE t_goods SET INVENTORY = #{inventory}
+        WHERE ID = #{id}
+    </update>
+
+    <select id="selectInventory" parameterType="int" resultType="int">
+        SELECT INVENTORY FROM t_goods
+        WHERE ID = #{id}
+    </select>
+
+    <insert id="insertHuocha" parameterType="Object" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO t_huocha(G_ID, DATE, HUOCHA)
+        VALUES(#{id}, CURTIME(),#{huocha})
+    </insert>
+
+</mapper>
